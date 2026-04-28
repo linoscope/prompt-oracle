@@ -9,7 +9,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",
     trace: "on",
     screenshot: "on",
   },
