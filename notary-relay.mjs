@@ -1,5 +1,5 @@
 /**
- * Notary Relay — connects PromptChancery contract to Pi Oracle TEE.
+ * Notary Relay — connects PromptChancery contract to the TEE prompt oracle.
  *
  * Listens for PromptRequested events, commits, waits for promptAfter,
  * calls TEE /prompt endpoint, and submits proof on-chain.
@@ -7,13 +7,16 @@
  * Usage:
  *   node notary-relay.mjs
  *
- * Environment:
+ * Environment (read from .env.relay if present, else process env):
  *   PRIVATE_KEY         — wallet private key (pays gas)
  *   RPC_URL             — Base HTTP RPC (default: https://mainnet.base.org)
  *   WS_URL              — Base WebSocket RPC (optional, enables real-time events)
  *   CONTRACT_ADDRESS    — deployed PromptChancery address
- *   TEE_URL             — Pi Oracle TEE endpoint
+ *   TEE_URL             — TEE oracle endpoint
  */
+
+import { config as loadEnv } from "dotenv"
+loadEnv({ path: ".env.relay" })
 
 import { createPublicClient, createWalletClient, http, webSocket, parseAbi, keccak256, encodePacked, toHex, hexToBytes, recoverPublicKey } from "viem"
 import { base } from "viem/chains"
