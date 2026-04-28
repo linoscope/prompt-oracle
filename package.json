@@ -4,7 +4,7 @@
   "description": "Run an LLM inside a TEE and get cryptographically signed responses. Verifiers can confirm on-chain that a specific prompt produced a specific response, with no tampering.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node notary-relay.mjs"
   },
   "keywords": [],
   "author": "",
