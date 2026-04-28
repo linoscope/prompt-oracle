@@ -17,6 +17,11 @@ services:
         const GROK_MODEL = "grok-4.20-0309-reasoning"
 
         async function getOracleKey() {
+          // The "/pi-oracle" path is the TEE key derivation salt and MUST stay
+          // unchanged. The deployed PromptChancery contract on Base has the
+          // resulting notary signer baked in via kmsRoot/appId. Renaming this
+          // path would orphan the existing on-chain identity and require
+          // redeployment of PromptChancery + BetMarket + a UI re-point.
           const result = await client.getKey("/pi-oracle", "ethereum")
           const privateKey = "0x" + Buffer.from(result.key).toString("hex").slice(0, 64)
           const account = privateKeyToAccount(privateKey)
