@@ -1,6 +1,6 @@
-# Pi Oracle: TEE-Attested AI Agent
+# Prompt Oracle: TEE-Attested AI Agent
 
-Run [pi agent](https://github.com/badlogic/pi-mono) inside a TEE and get cryptographically signed responses. Verifiers can confirm on-chain that a specific prompt produced a specific response, with no tampering.
+Run an LLM inside a TEE and get cryptographically signed responses. Verifiers can confirm on-chain that a specific prompt produced a specific response, with no tampering.
 
 ## How It Works
 
@@ -48,16 +48,14 @@ phala simulator start
 ### 2. Build and run
 
 ```bash
-cd tutorial/pi-oracle
-
 docker buildx use default
 docker compose build app
 
 docker run --rm -p 8080:8080 \
   -e DSTACK_SIMULATOR_ENDPOINT=/var/run/dstack.sock \
-  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e XAI_API_KEY=xai-... \
   -v ~/.phala-cloud/simulator/0.5.3/dstack.sock:/var/run/dstack.sock \
-  pi-oracle-app
+  prompt-oracle-app
 ```
 
 ### 3. Test
@@ -75,9 +73,8 @@ Example response:
 ```json
 {
   "statement": {
-    "source": "pi-agent",
-    "provider": "anthropic",
-    "model": "claude-sonnet-4-20250514",
+    "source": "grok",
+    "model": "grok-4.20-0309-reasoning",
     "prompt": "What is 2+2? Answer in one word.",
     "response": "Four",
     "timestamp": 1776320182544
@@ -135,7 +132,7 @@ print(f'         Match: {recovered_kms.to_checksum_address() == \"0x8f2cF602C969
 If you ran in the foreground, just Ctrl+C. If you ran with `-d` (background):
 
 ```bash
-docker stop $(docker ps -q --filter ancestor=pi-oracle-app)
+docker stop $(docker ps -q --filter ancestor=prompt-oracle-app)
 ```
 
 To stop the simulator:
@@ -151,10 +148,10 @@ phala simulator stop
 ```bash
 export PRIVATE_KEY="0x<your-key-with-ETH-on-Base>"
 
-phala deploy -n pi-oracle -c docker-compose.yaml \
+phala deploy -n prompt-oracle -c docker-compose.yaml \
   --kms base \
   --private-key "$PRIVATE_KEY" \
-  -e ANTHROPIC_API_KEY=sk-ant-...
+  -e XAI_API_KEY=xai-...
 ```
 
 Save the **App ID** from the output. The deploy command also creates an AppAuth contract on Base.
@@ -162,7 +159,7 @@ Save the **App ID** from the output. The deploy command also creates an AppAuth 
 ### 2. Wait for CVM to come online
 
 ```bash
-phala cvms get pi-oracle --json | jq '.status'
+phala cvms get prompt-oracle --json | jq '.status'
 # Wait until "running" — may take several minutes (npm install inside TD)
 ```
 
@@ -249,15 +246,15 @@ Should return `true`.
 ### 7. Clean up
 
 ```bash
-phala cvms delete pi-oracle
+phala cvms delete prompt-oracle
 ```
 
 ## Files
 
 ```
-pi-oracle/
+prompt-oracle/
 ├── docker-compose.yaml    # Build config, env vars, inline app code
-├── TeeVerifier.sol          # On-chain signature verification contract
+├── TeeVerifier.sol        # On-chain signature verification contract
 ├── foundry.toml           # Foundry config for contract compilation
 └── README.md
 ```

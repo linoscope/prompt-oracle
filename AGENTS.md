@@ -1,8 +1,8 @@
-# pi-oracle — agent notes
+# prompt-oracle — agent notes
 
-This directory holds the PromptChancery contract, the TEE notary relay, and the
-Next.js UI. The notes below are the load-bearing things future agents will trip
-over if they aren't aware.
+This repo holds the PromptChancery contract, the BetMarket contract, the TEE
+notary relay, and the Next.js UI. The notes below are the load-bearing things
+future agents will trip over if they aren't aware.
 
 ## Stack at a glance
 
@@ -26,24 +26,23 @@ locally; one is hosted. If any are down, the failure mode differs:
 | Service | Where it runs | Test fails if down? | Symptom |
 |---|---|---|---|
 | **UI dev server** (`next dev`) | `cd ui && npm run dev` → `http://localhost:3000` | **Yes — hard fail** | Playwright can't reach `baseURL`; first `page.goto("/")` errors |
-| **Notary relay** (`notary-relay.mjs`) | `cd tutorial/pi-oracle && PRIVATE_KEY=... CONTRACT_ADDRESS=... TEE_URL=... node notary-relay.mjs` | **No** for the current test | Submitted prompt sits in `Open` state on chain. The current step 6 only asserts the prompt text appears in the list, which happens regardless of fulfillment, so the test passes — but the user's prompt stays unanswered until someone restarts the relay |
+| **Notary relay** (`notary-relay.mjs`) | `PRIVATE_KEY=... CONTRACT_ADDRESS=... TEE_URL=... node notary-relay.mjs` from repo root | **No** for the current test | Submitted prompt sits in `Open` state on chain. The current step 6 only asserts the prompt text appears in the list, which happens regardless of fulfillment, so the test passes — but the user's prompt stays unanswered until someone restarts the relay |
 | **TEE oracle on Phala** (dstack TDX container) | Hosted; the notary `POST`s to `TEE_URL` to get Grok's signed response | **No** for the current test, same as above | Notary relay logs `Failed to call TEE: …`, prompt stays unfulfilled |
 
 **Practical checklist before running `npm run test:e2e`:**
 
 ```bash
 # Terminal 1: UI dev server (required)
-cd tutorial/pi-oracle/ui
+cd ui
 npm run dev
 
 # Terminal 2 (optional but expected): notary relay
-cd tutorial/pi-oracle
 PRIVATE_KEY=… CONTRACT_ADDRESS=0xE453E01aEF962A836a0B78AbB91a18f01C3d8160 \
   TEE_URL=https://… WS_URL=wss://… \
   node notary-relay.mjs
 
 # Terminal 3: tests
-cd tutorial/pi-oracle/ui
+cd ui
 npm run test:e2e
 ```
 

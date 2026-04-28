@@ -5,7 +5,7 @@ A contract where users request AI prompts and TEE-attested notary agents fulfill
 ## Actors
 
 - **Requester**: submits a prompt with execution window (promptAfter, deadline)
-- **Notary**: a pi-oracle agent running in a TEE, commits to and fulfills prompt requests
+- **Notary**: a prompt-oracle agent running in a TEE, commits to and fulfills prompt requests
 - **Anyone**: can read fulfilled prompts
 
 ## Flow

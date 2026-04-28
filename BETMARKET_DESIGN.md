@@ -351,7 +351,7 @@ Plus parallel specs for NO and UNDECIDED outcomes.
 
 1. `BetMarket.sol` + foundry tests against `MockPromptChancery` and `MockERC20`.
 2. Deploy `BetMarket` to Base mainnet against the existing `PromptChancery`.
-3. UI: extend `tutorial/pi-oracle/ui/` with `/` (create) and `/bet/<id>` (detail) routes.
+3. UI: extend `ui/` with `/bets` (create) and `/bets/[id]` (detail) routes.
 4. E2E specs with the existing viem burner pattern.
 5. Manual mainnet smoke before announcing.
 
