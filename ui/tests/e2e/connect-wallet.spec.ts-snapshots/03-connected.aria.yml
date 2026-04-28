@@ -1,0 +1,124 @@
+- main:
+  - heading "PromptChancery" [level=1]
+  - paragraph:
+    - text: TEE-attested AI prompt oracle on Base ·
+    - link "BetMarket":
+      - /url: /bets
+  - button "0xc470••••cBaf"
+  - heading "Submit Prompt" [level=2]
+  - textbox "Enter your prompt..."
+  - text: Execute after (minutes from now)
+  - spinbutton: "0"
+  - text: Deadline (minutes from now)
+  - spinbutton: /\d+/
+  - button "Submit Prompt" [disabled]
+  - heading /Prompts \(\d+\)/ [level=2]
+  - text: /#\d+ Fulfilled/
+  - paragraph: /What is 2\+2\? \(e2e \d+\)/
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. This is basic arithmetic."
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: /What is 2\+2\? \(e2e \d+\)/
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. This is basic arithmetic."
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 = 4. (Classic math—always reliable.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. (Classic arithmetic—always reliable, even in tests.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 = 4."
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. (Classic arithmetic—always has, always will.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. (Classic math—always reliable.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. (Classic math—always reliable.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4. (Classic arithmetic—always reliable.)"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 is a basic arithmetic fact that equals 4."
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: What is 2+2? (e2e test)
+  - text: "/From: 0xc47037\\.\\.\\.9CcBaf Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: "**4** 2 + 2 equals 4."
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number, and just number, where the format is "X posts" where X is the number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*\d+ posts\*\* This count comes from X advanced searches for posts from @linoscope since March \d+, \d+ \(one month before the April \d+, \d+ cutoff\)\. It includes 9 posts from a single thread on April \d+ and 2 quote posts on April \d+\. Additional paginated searches \(using max_id to fetch older results\) returned no further posts in the period, confirming the total\.\[\[1\]\]\(https:\/\/x\.com\/linoscope\/status\/\d+\)\[\[2\]\]\(https:\/\/x\.com\/linoscope\/status\/\d+\)/
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: hi
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM Response/"
+  - paragraph: Hey! 👋 What's up? How can I help today?
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 3:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number, and just number, where the format is "X posts" where X is the number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM Deadline: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM Response/"
+  - paragraph: "/\\*\\*\\d+ posts\\*\\* This is based on X advanced search results for posts from @linoscope \\(confirmed via user search\\) since March \\d+, \\d+ \\(approximately one month before the current date of April \\d+, \\d+\\)\\. The search in Latest mode returned exactly \\d+ posts: 9 from a single thread on April \\d+ and 1 standalone post on April \\d+, with no additional posts found in the period \\(including a follow-up query for earlier dates yielding zero results\\)\\. Each tweet, including those in threads, is counted individually as separate posts\\.\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)/"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM #\\d+ Fulfilled/"
+  - paragraph: Who posted to X more in the past month? gusgonzalezs or linoscope?
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM Deadline: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM Response/"
+  - paragraph: "/\\*\\*@gusgonzalezs posted more\\.\\*\\*\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/gusgonzalezs\\/status\\/\\d+\\) Using X advanced search for posts from each account since March \\d+, \\d+ \\(roughly the past month as of April \\d+, \\d+\\), with pagination via \"Latest\" mode and `max_id` to fetch older results: - \\*\\*@gusgonzalezs\\*\\* \\(Gustavo Gonzalez\\): Approximately \\d+–\\d+ posts\\/replies\\. These are spread across late March through mid-to-late April, including multiple single tweets, replies, threads about AI agents, dev tools \\(e\\.g\\., defi-cli updates\\), Claude\\/Code usage, Taiko-related topics, and general commentary\\. Activity appears consistent at roughly 1\\+ post per day on many days\\.\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/gusgonzalezs\\/status\\/\\d+\\) - \\*\\*@linoscope\\*\\* \\(Lin Oshitani\\): Around \\d+–\\d+ posts total\\. This includes one long ~9–\\d+ tweet thread on April \\d+ about L2 fee vaults, control theory, and related research \\(co-authored, tagged @gusgonzalezs among others\\), plus 2–4 personal posts\\/quotes in mid-April \\(mostly April \\d+\\) promoting his wife’s photography exhibition in Tokyo\\/Kyoto\\. No additional posts were found in March\\.\\[\\[3\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) Gusgonzalezs shows higher overall posting volume \\(more frequent short replies, updates, and commentary\\), while linoscope’s activity is lower-volume but includes one substantial research thread\\. Note that exact counts can vary slightly due to deleted posts, exact date cutoffs, threads vs\\. standalone tweets, or tool pagination limits, but the difference is clear\\. Both accounts are in the crypto\\/protocol\\/AI space and appear to interact occasionally\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ AM #\\d+ Fulfilled/"
+  - paragraph: hi
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Response/"
+  - paragraph: Hey! 👋 What's up? How can I help today?
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM #\\d+ Fulfilled/"
+  - paragraph: hi
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Response/"
+  - paragraph: Hey! What's up? 😊
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM #9 Fulfilled/"
+  - paragraph: /who won the leinster gaa quarter final between louth and wexford on 19th April \d+/
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*Louth won\*\* the Leinster Senior Football Championship quarter-final against Wexford on \d+ April \d+\.\[\[1\]\]\(https:\/\/www\.the42\.ie\/sunday-gaelic-football-results-\d+-Apr2026\/\) \*\*Final score:\*\* Louth 1-\d+ Wexford 0-\d+ \(a \d+-point victory\)\.\[\[2\]\]\(https:\/\/www\.gaa\.ie\/football\/leinster-gaa-football-senior-championship\/louth-wexford\/[0-9a-fA-F-]+\) The match took place at Netwatch Cullen Park in Carlow\. Defending Leinster champions Louth dominated the game, leading 0-\d+ to 0-5 at half-time before pulling away in the second half with a penalty goal from captain Sam Mulroy \(who finished with 1-4\)\. They now advance to a semi-final against Dublin\.\[\[3\]\]\(https:\/\/www\.irishtimes\.com\/sport\/gaelic-games\/\d+\/\d+\/\d+\/louth-get-leinster-defence-off-to-winning-start-against-wexford\/\) This is confirmed across official Leinster GAA channels, GAA\.ie, RTÉ, The42\.ie, Irish Times, and Irish Examiner\. It was a football match \(not hurling\)\./
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, \\d+:\\d+:\\d+ PM #8 Fulfilled/"
+  - paragraph: /who won the leinster gaa quarter final between louth and wexford on 19th April \d+/
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*Louth won the match convincingly\.\*\* \*\*Final score:\*\* Louth 1-\d+ Wexford 0-\d+ \(a \d+-point victory\)\.\[\[1\]\]\(https:\/\/www\.gaa\.ie\/football\/leinster-gaa-football-senior-championship\/louth-wexford\/[0-9a-fA-F-]+\) This was the Leinster Senior Football Championship quarter-final, played on Sunday \d+ April \d+ at Netwatch Cullen Park \(Carlow\)\. Louth, the defending Leinster champions, advanced to the semi-finals\.\[\[2\]\]\(https:\/\/www\.rte\.ie\/sport\/football\/\d+\/\d+\/\d+-leinster-senior-football-championship-updates\/\) The result is confirmed across official sources including the GAA, Leinster GAA, RTÉ, and match reports\.\[\[3\]\]\(https:\/\/x\.com\/gaaleinster\/status\/\d+\?ref_src=twsrc%5Etfw\) No further information \(such as detailed scorers\) is needed unless you want a full match report\./
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM #7 Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number, and just number, where the format is "X posts" where X is the number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Response/"
+  - paragraph: "/\\*\\*\\d+ posts\\*\\* From X posts by @linoscope \\(verified via user search and keyword searches with `from:linoscope since:\\d+-\\d+-\\d+` in Latest mode\\): - 9 posts formed a single research thread on April \\d+, \\d+ \\(control theory applied to L2 fee vaults, co-authored post with diagrams and simulator link\\)\\.\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) - 2 posts on April \\d+, \\d+ \\(both quoting\\/promoting his wife's photography exhibitions in Tokyo and Kyoto for KYOTOGRAPHIE \\d+\\)\\.\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) No posts found from March \\d+–April 1 or April 1–\\d+ \\(other than the April \\d+ posts\\), and none after April \\d+ up to April \\d+, \\d+\\. Each thread reply counts as a separate post, for a total of \\d+ in the past month\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM #6 Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number, and just number, where the format is "X posts" where X is the number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Response/"
+  - paragraph: "/\\*\\*\\d+ posts\\*\\*\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) This count is based on X advanced search results for posts from:@linoscope since March \\d+, \\d+ \\(roughly the past month as of April \\d+, \\d+\\)\\. It includes: - 2 posts on April \\d+, \\d+ \\(both related to a photography exhibition\\)\\. - 9 posts on April \\d+, \\d+ \\(a single long thread on \"The L2 Fee Vault\"\\)\\. No other posts were found in March or early April, and none after April \\d+ up to the current date\\. Each tweet in the thread counts as a separate post, as confirmed by distinct post IDs and timestamps from the search results\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM #5 Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number, and just number, where the format is "X posts" where X is the number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*\d+ posts\*\* This count comes from X advanced search results for posts by @linoscope \(from:linoscope\) since March \d+, \d+ \(approximately one month before the current date of April \d+, \d+\)\. It includes a 9-post thread on April \d+ plus two additional posts on April \d+, with no further results found in the period\./
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM #4 Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM Response/"
+  - paragraph: "/\\*\\*\\d+ tweets\\.\\*\\*\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) Using X advanced search for posts from:@linoscope between March \\d+, \\d+ and April \\d+, \\d+ \\(in Latest mode, with pagination via max_id\\), the results show exactly \\d+ posts: - 9 posts on April \\d+, \\d+ \\(a single thread about \"The L2 Fee Vault: Pricing L1 Costs with Feedback Control\"\\)\\. - 2 posts on April \\d+, \\d+ \\(both quotes\\/reposts related to his wife's art exhibition at KYOTOGRAPHIE \\d+\\)\\. No additional posts were found in the period \\(searches before the oldest returned ID yielded no results, and the most recent posts stop at mid-April\\)\\. Each post in a thread counts separately toward the total\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 4:\\d+:\\d+ PM #3 Fulfilled/"
+  - paragraph: How many liked in X did linoscope get past month? Return number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*\d+\*\* \(total likes received on @linoscope’s posts from approximately March \d+ to April \d+, \d+\)\.\[\[1\]\]\(https:\/\/x\.com\/linoscope\/status\/\d+\)\[\[2\]\]\(https:\/\/x\.com\/linoscope\/status\/\d+\) This comes from all original posts and thread replies by the account in that period \(one 9-post thread on April \d+ with \d+ likes across its posts, plus two quote\/reply posts on April \d+ with 2 and 1 likes\)\. No additional posts were found in the timeframe\. Likes are summed from the engagement metrics on each post returned by X search\./
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #2 Fulfilled/"
+  - paragraph: How many liked in X did linoscope get past month? Return number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Response/"
+  - paragraph: "/\\*\\*\\d+\\*\\*\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[3\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[4\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) This is the total number of likes across all of @linoscope's posts \\(including all parts of threads and quote\\/reply posts\\) from the past month \\(since ~March \\d+, \\d+, up to April \\d+, \\d+\\)\\. @linoscope posted infrequently: one 9-tweet thread on April \\d+ \\(likes: \\d+ \\+ 4 \\+ 4 \\+ 4 \\+ 3 \\+ 2 \\+ 2 \\+ 2 \\+ 1 = \\d+\\) and two posts on April \\d+ \\(2 likes and 1 like\\)\\. No posts in March or mid-April\\. The searches returned all relevant posts with no others found\\.\\[\\[5\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) Exact counts can fluctuate slightly over time as likes change, but this reflects the data at the time of retrieval\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #1 Fulfilled/"
+  - paragraph: How many tweets did linoscope post past month? Return number.
+  - text: "/From: 0x19f826\\.\\.\\.84cDE0 Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Response/"
+  - paragraph: "/\\*\\*\\d+\\*\\* \\(9 tweets in a thread on April \\d+, \\d+ \\+ 2 tweets on April \\d+, \\d+\\)\\.\\[\\[1\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\)\\[\\[2\\]\\]\\(https:\\/\\/x\\.com\\/linoscope\\/status\\/\\d+\\) No other posts were found from March \\d+ to April \\d+, \\d+ \\(or in early March\\)\\. The count includes every individual post\\/tweet, including each part of the thread\\. This is based on exhaustive paginated searches using X advanced operators \\(`from:linoscope since:\\d+-\\d+-\\d+` \\+ `max_id:` pagination in Latest mode\\)\\./"
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM #0 Fulfilled/"
+  - paragraph: Who is the current US president? Search the web.
+  - text: "/From: 0xc0dCfD\\.\\.\\.f77f18 Execute after: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Deadline: 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM Response/"
+  - paragraph: /\*\*Donald Trump is the current President of the United States\.\*\*\[\[1\]\]\(https:\/\/en\.wikipedia\.org\/wiki\/President_of_the_United_States\) As of April \d+, he is serving his second non-consecutive term as the 47th president \(following his first term as the 45th from \d+–\d+\)\. He was inaugurated for this term on January \d+, \d+, and his current term is scheduled to end on January \d+, \d+\.\[\[2\]\]\(https:\/\/www\.govtrack\.us\/congress\/other-people\/donald_trump\/\d+\) This is confirmed across official sources, including the White House website, which refers to him as President Donald J\. Trump returning with a mandate from the \d+ election, as well as recent records of him signing executive orders and delivering addresses in April \d+\.\[\[3\]\]\(https:\/\/www\.whitehouse\.gov\/administration\/donald-j-trump\/\) Wikipedia, Britannica, and congressional tracking sites like GovTrack\.us align on these details\.\[\[4\]\]\(https:\/\/en\.wikipedia\.org\/wiki\/Donald_Trump\) No other individual holds the office based on current information\./
+  - text: "/Notary: 0xc0dCfD\\.\\.\\.f77f18 · 4\\/\\d+\\/\\d+, 2:\\d+:\\d+ PM/"

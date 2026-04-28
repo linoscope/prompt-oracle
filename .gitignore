@@ -1,0 +1,22 @@
+# env
+.env
+.env.*
+!.env.example
+
+# language / framework caches
+**/node_modules/
+**/.next/
+**/cache/
+
+# build artifacts / test outputs
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+
+# foundry
+out/
+**/broadcast/*/*/dry-run/
+
+# editor / OS
+*~
+.DS_Store

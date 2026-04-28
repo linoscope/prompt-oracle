@@ -1,0 +1,137 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:22-slim
+        WORKDIR /app
+        RUN npm init -y && npm install @phala/dstack-sdk viem
+        RUN cat > index.mjs <<'SCRIPT'
+        import { DstackClient } from "@phala/dstack-sdk"
+        import { createServer } from "http"
+        import { privateKeyToAccount } from "viem/accounts"
+        import { keccak256, encodePacked, toHex, hexToBytes } from "viem"
+        import { secp256k1 } from "@noble/curves/secp256k1"
+
+        const client = new DstackClient()
+        const GROK_MODEL = "grok-4.20-0309-reasoning"
+
+        async function getOracleKey() {
+          const result = await client.getKey("/pi-oracle", "ethereum")
+          const privateKey = "0x" + Buffer.from(result.key).toString("hex").slice(0, 64)
+          const account = privateKeyToAccount(privateKey)
+
+          const derivedPrivBytes = hexToBytes(privateKey)
+          const derivedPubkey = secp256k1.getPublicKey(derivedPrivBytes.slice(0, 32), true)
+
+          const toHexStr = (x) => typeof x === 'string' ? x : '0x' + Buffer.from(x).toString('hex')
+          return {
+            account,
+            derivedPubkey: toHex(derivedPubkey),
+            appSignature: toHexStr(result.signature_chain[0]),
+            kmsSignature: toHexStr(result.signature_chain[1])
+          }
+        }
+
+        async function callGrok(prompt) {
+          const res = await fetch("https://api.x.ai/v1/responses", {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + process.env.XAI_API_KEY,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: GROK_MODEL,
+              input: [{ role: "user", content: prompt }],
+              tools: [{ type: "web_search" }, { type: "x_search" }]
+            })
+          })
+          const data = await res.json()
+          if (data.error) throw new Error(data.error)
+          const msg = data.output.find(o => o.type === "message")
+          if (!msg) throw new Error("no message in response")
+          const text = msg.content.find(c => c.type === "output_text")
+          if (!text) throw new Error("no text in message")
+          return text.text
+        }
+
+        async function getSignedResponse(oracle, prompt) {
+          const response = await callGrok(prompt)
+
+          const statement = {
+            source: "grok",
+            model: GROK_MODEL,
+            prompt,
+            response,
+            timestamp: Date.now()
+          }
+
+          const messageHash = keccak256(
+            encodePacked(
+              ["string", "string", "uint256"],
+              [statement.prompt, statement.response, BigInt(statement.timestamp)]
+            )
+          )
+
+          const signature = await oracle.account.signMessage({ message: { raw: messageHash } })
+
+          return {
+            statement,
+            messageHash,
+            signature,
+            signatureChain: {
+              derivedPubkey: oracle.derivedPubkey,
+              appSignature: oracle.appSignature,
+              kmsSignature: oracle.kmsSignature
+            },
+            signerAddress: oracle.account.address
+          }
+        }
+
+        const oracle = await getOracleKey()
+        const info = await client.info()
+        console.log("Grok Oracle signer:", oracle.account.address)
+        console.log("App ID:", info.app_id)
+
+        createServer(async (req, res) => {
+          res.setHeader("Content-Type", "application/json")
+
+          if (req.url === "/prompt" && req.method === "POST") {
+            let body = ""
+            req.on("data", c => body += c)
+            req.on("end", async () => {
+              try {
+                const { prompt } = JSON.parse(body)
+                if (!prompt) {
+                  res.writeHead(400)
+                  res.end(JSON.stringify({ error: "prompt is required" }))
+                  return
+                }
+                const result = await getSignedResponse(oracle, prompt)
+                res.writeHead(200)
+                res.end(JSON.stringify(result, null, 2))
+              } catch (e) {
+                res.writeHead(500)
+                res.end(JSON.stringify({ error: e.message }))
+              }
+            })
+          } else {
+            res.writeHead(200)
+            res.end(JSON.stringify({
+              endpoints: ["GET /", "POST /prompt"],
+              appId: info.app_id,
+              signerAddress: oracle.account.address,
+              derivedPubkey: oracle.derivedPubkey,
+              model: GROK_MODEL,
+              usage: 'curl -X POST -d \'{"prompt":"hello"}\' http://localhost:8080/prompt'
+            }, null, 2))
+          }
+        }).listen(8080, () => console.log("Grok Oracle at http://localhost:8080"))
+        SCRIPT
+        CMD ["node", "index.mjs"]
+    ports:
+      - "8080:8080"
+    environment:
+      - XAI_API_KEY
+    volumes:
+      - /var/run/dstack.sock:/var/run/dstack.sock

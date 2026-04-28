@@ -1,0 +1,17 @@
+{
+  "name": "pi-oracle",
+  "version": "1.0.0",
+  "description": "Run [pi agent](https://github.com/badlogic/pi-mono) inside a TEE and get cryptographically signed responses. Verifiers can confirm on-chain that a specific prompt produced a specific response, with no tampering.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@noble/curves": "^2.2.0",
+    "viem": "^2.48.1"
+  }
+}
