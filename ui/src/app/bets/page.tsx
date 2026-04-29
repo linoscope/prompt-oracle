@@ -14,7 +14,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi"
 import { base } from "wagmi/chains"
-import { formatUnits, parseUnits, maxUint256 } from "viem"
+import { formatUnits, parseUnits } from "viem"
 import {
   BETMARKET_ADDRESS,
   BETMARKET_ABI,
@@ -118,7 +118,7 @@ function CreateBet() {
       abi: ERC20_ABI,
       functionName: "approve",
       chainId: base.id,
-      args: [BETMARKET_ADDRESS, maxUint256],
+      args: [BETMARKET_ADDRESS, creatorStakeWei],
     })
   }
 
@@ -209,7 +209,7 @@ function CreateBet() {
             ? "Approving USDC..."
             : approveSuccess
             ? "Re-checking allowance..."
-            : "Approve USDC (one-time)"}
+            : `Approve ${creatorStake} USDC`}
         </button>
       ) : (
         <button

@@ -14,7 +14,7 @@ import {
 } from "wagmi"
 import { base } from "wagmi/chains"
 import { useQueryClient } from "@tanstack/react-query"
-import { formatUnits, maxUint256 } from "viem"
+import { formatUnits } from "viem"
 import {
   BETMARKET_ADDRESS,
   BETMARKET_ABI,
@@ -175,7 +175,7 @@ function AcceptPanel({ betId, takerStake }: { betId: bigint; takerStake: bigint 
       abi: ERC20_ABI,
       functionName: "approve",
       chainId: base.id,
-      args: [BETMARKET_ADDRESS, maxUint256],
+      args: [BETMARKET_ADDRESS, takerStake],
     })
   const accept = () =>
     writeContract({
@@ -196,7 +196,7 @@ function AcceptPanel({ betId, takerStake }: { betId: bigint; takerStake: bigint 
         ? "Confirm in wallet..."
         : confirming
         ? "Approving USDC..."
-        : `Approve USDC (one-time, then accept)`}
+        : `Approve ${formatUnits(takerStake, USDC_DECIMALS)} USDC`}
     </button>
   ) : (
     <button

@@ -103,7 +103,7 @@ test("BetMarket: full NO flow — taker wins after Grok answers NO", async ({
   })
 
   // ─── Step 4 — approve USDC if needed, then create bet ────────────────
-  const approveBtn = creatorPage.getByRole("button", { name: /Approve USDC/i })
+  const approveBtn = creatorPage.getByRole("button", { name: /Approve.*USDC/i })
   if (await approveBtn.isVisible().catch(() => false)) {
     await approveBtn.click()
     // Wait for allowance refresh → button flips to "Create Bet".
@@ -157,10 +157,10 @@ test("BetMarket: full NO flow — taker wins after Grok answers NO", async ({
 
   // Wait for either Approve USDC or Accept bet button to be ready (allowance loaded).
   await expect(
-    takerPage.getByRole("button", { name: /Approve USDC|Accept bet/i })
+    takerPage.getByRole("button", { name: /Approve.*USDC|Accept bet/i })
   ).toBeVisible({ timeout: 30_000 })
 
-  const takerApprove = takerPage.getByRole("button", { name: /Approve USDC/i })
+  const takerApprove = takerPage.getByRole("button", { name: /Approve.*USDC/i })
   if (await takerApprove.isVisible().catch(() => false)) {
     await takerApprove.click()
     await expect(takerPage.getByRole("button", { name: /Accept bet/i })).toBeVisible({
