@@ -22,7 +22,7 @@ import {
   USDC_DECIMALS,
   ERC20_ABI,
   STATUS_LABELS,
-  WRAPPER_PREFIX,
+  buildPromptPreview,
 } from "../betmarket-contract"
 
 function localToUnix(value: string): bigint {
@@ -136,8 +136,11 @@ function CreateBet() {
       <details className="mb-3 text-xs text-gray-500 bg-gray-800 rounded p-3">
         <summary className="cursor-pointer text-gray-400">What gets sent to the oracle</summary>
         <pre className="mt-2 whitespace-pre-wrap text-gray-300">
-          {WRAPPER_PREFIX}
-          <span className="text-yellow-300">{question || "<your question>"}</span>
+          {buildPromptPreview(
+            question || "<your question>",
+            Number(localToUnix(promptAfterLocal || new Date().toISOString().slice(0, 16))),
+            Number(localToUnix(deadlineLocal || new Date().toISOString().slice(0, 16))),
+          )}
         </pre>
       </details>
 

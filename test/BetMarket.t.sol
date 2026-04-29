@@ -100,17 +100,26 @@ contract BetMarketTest is Test {
         assertEq(uint8(b.status), uint8(BetMarket.Status.Matched));
         assertGt(b.matchedAt, 0);
 
-        // Chancery received the wrapped prompt
+        // The prompt sent to the chancery must include both the static
+        // instruction block and the per-bet context (matched / earliest-
+        // resolution / deadline as Unix-epoch seconds), so the LLM can
+        // resolve relative-time questions without the question itself
+        // having to bake in absolute UTC dates.
         (string memory storedPrompt, , ) = chancery.prompts(b.promptId);
-        assertEq(
-            storedPrompt,
-            string(abi.encodePacked(
-                "Answer the following question. Output exactly two parts. ",
-                "Line 1: one word, either YES, NO, or UNDECIDED. ",
-                "Line 2 onwards: your reasoning.\n\nQuestion: ",
-                QUESTION
-            ))
+        string memory expected = string.concat(
+            "Answer the following question. Output exactly two parts. ",
+            "Line 1: one word, either YES, NO, or UNDECIDED. ",
+            "Line 2 onwards: your reasoning.\n\n",
+            "Bet context (Unix epoch seconds, UTC): matched=",
+            vm.toString(uint256(b.matchedAt)),
+            ", earliestResolution=",
+            vm.toString(uint256(b.promptAfter)),
+            ", deadline=",
+            vm.toString(uint256(b.deadline)),
+            ".\n\nQuestion: ",
+            QUESTION
         );
+        assertEq(storedPrompt, expected);
     }
 
     function test_AcceptBet_RevertsIfCreator() public {

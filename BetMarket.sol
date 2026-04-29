@@ -34,10 +34,15 @@ contract BetMarket {
     IERC20 public immutable usdc;
     IPromptChancery public immutable chancery;
 
+    // The static instruction block is the same for every bet. The per-bet
+    // context (matched / earliest-resolution / deadline timestamps) is
+    // appended dynamically inside acceptBet so the LLM can resolve questions
+    // phrased in terms of "since the bet was matched" without the user having
+    // to bake absolute UTC timestamps into the question text.
     string constant WRAPPER_PREFIX =
         "Answer the following question. Output exactly two parts. "
         "Line 1: one word, either YES, NO, or UNDECIDED. "
-        "Line 2 onwards: your reasoning.\n\nQuestion: ";
+        "Line 2 onwards: your reasoning.\n\n";
 
     enum Status {
         Open,         // creator escrowed, awaiting taker
@@ -137,7 +142,8 @@ contract BetMarket {
 
         require(usdc.transferFrom(msg.sender, address(this), b.takerStake), "USDC transferFrom failed");
 
-        string memory wrapped = string(abi.encodePacked(WRAPPER_PREFIX, b.question));
+        uint64 matchedAt = uint64(block.timestamp);
+        string memory wrapped = _buildPrompt(b.question, matchedAt, b.promptAfter, b.deadline);
         uint256 promptId = chancery.submitPrompt(IPromptChancery.PromptRequest({
             prompt: wrapped,
             promptAfter: b.promptAfter,
@@ -145,7 +151,7 @@ contract BetMarket {
         }));
 
         b.taker = msg.sender;
-        b.matchedAt = uint64(block.timestamp);
+        b.matchedAt = matchedAt;
         b.promptId = promptId;
         b.status = Status.Matched;
 
@@ -191,6 +197,42 @@ contract BetMarket {
     }
 
     // --- Internal ---
+
+    function _buildPrompt(
+        string memory question,
+        uint64 matchedAt,
+        uint64 promptAfter,
+        uint64 deadline
+    ) internal pure returns (string memory) {
+        return string.concat(
+            WRAPPER_PREFIX,
+            "Bet context (Unix epoch seconds, UTC): matched=",
+            _toString(matchedAt),
+            ", earliestResolution=",
+            _toString(promptAfter),
+            ", deadline=",
+            _toString(deadline),
+            ".\n\nQuestion: ",
+            question
+        );
+    }
+
+    function _toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
 
     function _parseVerdict(string memory response) internal pure returns (Status) {
         bytes memory r = bytes(response);

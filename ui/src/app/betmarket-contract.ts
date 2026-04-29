@@ -1,4 +1,4 @@
-export const BETMARKET_ADDRESS = "0x48F207576Ce3915d94a8eAe6BF0d19eE89e9E45d" as const
+export const BETMARKET_ADDRESS = "0x4A2d6c01964bc918ecd5c0864Ff43069f20A733E" as const
 
 // Base USDC — used for approve() before createBet/acceptBet.
 export const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const
@@ -152,9 +152,25 @@ export const BETMARKET_ABI = [
   },
 ] as const
 
-// Mirrors WRAPPER_PREFIX in BetMarket.sol — display in the create form so users
-// know exactly what gets sent to the oracle.
+// Mirrors the prompt assembly in BetMarket.acceptBet — used by the create
+// form to preview exactly what the oracle will see. The bet-context line
+// uses placeholders here because the matched/promptAfter/deadline values
+// are only known at acceptBet time on chain; the form fills the latter
+// two from the user's form inputs and shows "<matchedAt>" as a sentinel.
 export const WRAPPER_PREFIX =
   "Answer the following question. Output exactly two parts. " +
   "Line 1: one word, either YES, NO, or UNDECIDED. " +
-  "Line 2 onwards: your reasoning.\n\nQuestion: "
+  "Line 2 onwards: your reasoning.\n\n"
+
+export function buildPromptPreview(
+  question: string,
+  promptAfter: number,
+  deadline: number,
+): string {
+  return (
+    WRAPPER_PREFIX +
+    `Bet context (Unix epoch seconds, UTC): matched=<set when accepted>, ` +
+    `earliestResolution=${promptAfter}, deadline=${deadline}.\n\n` +
+    `Question: ${question}`
+  )
+}
