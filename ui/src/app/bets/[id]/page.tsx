@@ -288,7 +288,8 @@ export default function BetDetail() {
           </span>
         </div>
 
-        <p className="text-gray-100 text-lg mb-4">{bet.question}</p>
+        <h2 className="text-gray-100 text-xl font-semibold mb-2">{bet.title || "(untitled)"}</h2>
+        <p className="text-gray-400 text-sm whitespace-pre-wrap mb-4">{bet.question}</p>
 
         <div className="grid grid-cols-2 gap-3 text-sm text-gray-400 mb-4">
           <div>

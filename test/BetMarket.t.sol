@@ -15,6 +15,7 @@ contract BetMarketTest is Test {
 
     uint128 constant CREATOR_STAKE = 10e6; // 10 USDC (6 decimals)
     uint128 constant TAKER_STAKE   = 10e6;
+    string constant TITLE = "linoscope X post";
     string constant QUESTION = "Will linoscope post on X with at least 100 likes within May?";
 
     function setUp() public {
@@ -34,6 +35,7 @@ contract BetMarketTest is Test {
     function _create() internal returns (uint256 betId) {
         vm.prank(creator);
         betId = bm.createBet(
+            TITLE,
             QUESTION,
             uint64(block.timestamp + 1 hours),
             uint64(block.timestamp + 2 hours),
@@ -65,6 +67,7 @@ contract BetMarketTest is Test {
         assertEq(b.taker, address(0));
         assertEq(uint256(b.creatorStake), CREATOR_STAKE);
         assertEq(uint256(b.takerStake), TAKER_STAKE);
+        assertEq(b.title, TITLE);
         assertEq(b.question, QUESTION);
         assertEq(uint8(b.status), uint8(BetMarket.Status.Open));
     }
@@ -72,15 +75,15 @@ contract BetMarketTest is Test {
     function test_CreateBet_RevertsOnPastDeadline() public {
         vm.prank(creator);
         vm.expectRevert(bytes("deadline must follow promptAfter"));
-        bm.createBet(QUESTION, uint64(block.timestamp + 2 hours), uint64(block.timestamp + 1 hours), CREATOR_STAKE, TAKER_STAKE);
+        bm.createBet(TITLE, QUESTION, uint64(block.timestamp + 2 hours), uint64(block.timestamp + 1 hours), CREATOR_STAKE, TAKER_STAKE);
 
         vm.prank(creator);
         vm.expectRevert(bytes("promptAfter must be in the future"));
-        bm.createBet(QUESTION, uint64(block.timestamp - 1), uint64(block.timestamp + 1 hours), CREATOR_STAKE, TAKER_STAKE);
+        bm.createBet(TITLE, QUESTION, uint64(block.timestamp - 1), uint64(block.timestamp + 1 hours), CREATOR_STAKE, TAKER_STAKE);
 
         vm.prank(creator);
         vm.expectRevert(bytes("stakes must be > 0"));
-        bm.createBet(QUESTION, uint64(block.timestamp + 1 hours), uint64(block.timestamp + 2 hours), 0, TAKER_STAKE);
+        bm.createBet(TITLE, QUESTION, uint64(block.timestamp + 1 hours), uint64(block.timestamp + 2 hours), 0, TAKER_STAKE);
     }
 
     // --- acceptBet ---

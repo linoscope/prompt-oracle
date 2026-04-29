@@ -58,7 +58,8 @@ contract BetMarket {
         address taker;          // 0x0 until Matched
         uint128 creatorStake;
         uint128 takerStake;
-        string  question;       // raw, for UI display
+        string  title;          // short label for UI lists; not sent to the oracle
+        string  question;       // full text sent to the oracle (after wrapping)
         uint64  promptAfter;
         uint64  deadline;
         uint64  createdAt;
@@ -73,6 +74,7 @@ contract BetMarket {
     event BetCreated(
         uint256 indexed betId,
         address indexed creator,
+        string  title,
         string  question,
         uint64  promptAfter,
         uint64  deadline,
@@ -91,6 +93,7 @@ contract BetMarket {
     // --- Creator actions ---
 
     function createBet(
+        string  calldata title,
         string  calldata question,
         uint64  promptAfter,
         uint64  deadline,
@@ -109,6 +112,7 @@ contract BetMarket {
             taker: address(0),
             creatorStake: creatorStake,
             takerStake: takerStake,
+            title: title,
             question: question,
             promptAfter: promptAfter,
             deadline: deadline,
@@ -118,7 +122,7 @@ contract BetMarket {
             status: Status.Open
         });
 
-        emit BetCreated(betId, msg.sender, question, promptAfter, deadline, creatorStake, takerStake);
+        emit BetCreated(betId, msg.sender, title, question, promptAfter, deadline, creatorStake, takerStake);
     }
 
     function cancel(uint256 betId) external {

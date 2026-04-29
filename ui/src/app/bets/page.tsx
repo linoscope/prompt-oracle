@@ -50,6 +50,7 @@ function defaultLocal(offsetMinutes: number): string {
 function CreateBet() {
   const router = useRouter()
   const { address } = useAccount()
+  const [title, setTitle] = useState("")
   const [question, setQuestion] = useState("")
   const [promptAfterLocal, setPromptAfterLocal] = useState(defaultLocal(60))
   const [deadlineLocal, setDeadlineLocal] = useState(defaultLocal(180))
@@ -96,13 +97,14 @@ function CreateBet() {
   }, [createSuccess, createReceipt, router])
 
   const submit = () => {
-    if (!question.trim()) return
+    if (!title.trim() || !question.trim()) return
     writeCreate({
       address: BETMARKET_ADDRESS,
       abi: BETMARKET_ABI,
       functionName: "createBet",
       chainId: base.id,
       args: [
+        title,
         question,
         localToUnix(promptAfterLocal),
         localToUnix(deadlineLocal),
@@ -125,10 +127,18 @@ function CreateBet() {
   return (
     <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
       <h2 className="text-lg font-semibold mb-4">Create Bet</h2>
+      <input
+        className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-gray-100 mb-3"
+        type="text"
+        maxLength={80}
+        placeholder="Title — e.g. linoscope X post within May"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
       <textarea
         className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-gray-100 mb-3 resize-none"
         rows={3}
-        placeholder="e.g. Will linoscope post on X with at least 100 likes within May?"
+        placeholder="Full question — e.g. Will linoscope post on X with at least 100 likes within May?"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
       />
@@ -214,7 +224,7 @@ function CreateBet() {
       ) : (
         <button
           onClick={submit}
-          disabled={createPending || createConfirming || !question.trim()}
+          disabled={createPending || createConfirming || !title.trim() || !question.trim()}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium py-2 px-4 rounded transition"
         >
           {createPending ? "Confirm in wallet..." : createConfirming ? "Creating bet..." : "Create Bet"}
@@ -304,7 +314,8 @@ function BetList() {
                   {STATUS_LABELS[status]}
                 </span>
               </div>
-              <p className="text-gray-200 text-sm mb-2 line-clamp-2">{b.question}</p>
+              <p className="text-gray-100 font-medium mb-1">{b.title || "(untitled)"}</p>
+              <p className="text-gray-500 text-xs mb-2 line-clamp-2">{b.question}</p>
               <div className="text-xs text-gray-500 flex gap-4">
                 <span>{formatUnits(b.creatorStake, USDC_DECIMALS)} : {formatUnits(b.takerStake, USDC_DECIMALS)} USDC</span>
                 <span>creator {shortAddr(b.creator)}</span>

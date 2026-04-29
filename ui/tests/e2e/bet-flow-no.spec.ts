@@ -84,7 +84,8 @@ test("BetMarket: full NO flow — taker wins after Grok answers NO", async ({
   await creatorPage.waitForTimeout(1000)
 
   // ─── Step 3 — fill the create-bet form ───────────────────────────────
-  await creatorPage.getByPlaceholder(/Will linoscope/i).fill(QUESTION)
+  await creatorPage.getByPlaceholder(/^Title/i).fill("E2E bet")
+  await creatorPage.getByPlaceholder(/^Full question/i).fill(QUESTION)
   // Set short windows for fast resolution: resolve-after = +2min, deadline = +12min
   // datetime-local format: YYYY-MM-DDTHH:MM
   const toLocal = (offsetMin: number) => {

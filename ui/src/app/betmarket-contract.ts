@@ -1,4 +1,4 @@
-export const BETMARKET_ADDRESS = "0x4A2d6c01964bc918ecd5c0864Ff43069f20A733E" as const
+export const BETMARKET_ADDRESS = "0xEe764A57b0525B76E3B3160A29c5d6F2Af2Df071" as const
 
 // Base USDC — used for approve() before createBet/acceptBet.
 export const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const
@@ -44,6 +44,7 @@ export const BETMARKET_ABI = [
   // --- writes ---
   {
     inputs: [
+      { name: "title", type: "string" },
       { name: "question", type: "string" },
       { name: "promptAfter", type: "uint64" },
       { name: "deadline", type: "uint64" },
@@ -87,6 +88,7 @@ export const BETMARKET_ABI = [
           { name: "taker", type: "address" },
           { name: "creatorStake", type: "uint128" },
           { name: "takerStake", type: "uint128" },
+          { name: "title", type: "string" },
           { name: "question", type: "string" },
           { name: "promptAfter", type: "uint64" },
           { name: "deadline", type: "uint64" },
@@ -115,6 +117,7 @@ export const BETMARKET_ABI = [
     inputs: [
       { indexed: true, name: "betId", type: "uint256" },
       { indexed: true, name: "creator", type: "address" },
+      { indexed: false, name: "title", type: "string" },
       { indexed: false, name: "question", type: "string" },
       { indexed: false, name: "promptAfter", type: "uint64" },
       { indexed: false, name: "deadline", type: "uint64" },
