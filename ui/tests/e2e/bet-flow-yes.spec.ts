@@ -8,9 +8,9 @@ import {
   parseUnits,
 } from "viem"
 import { base } from "viem/chains"
+import { BETMARKET_ADDRESS as BETMARKET } from "../../src/app/betmarket-contract"
 
 const RPC = process.env.BASE_RPC || "https://mainnet.base.org"
-const BETMARKET = "0x48F207576Ce3915d94a8eAe6BF0d19eE89e9E45d"
 const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 
 // Tiny stakes so this stays cheap; total cost per YES run ≈ takerStake + gas.
