@@ -1,71 +1,190 @@
-# Prompt Oracle: TEE-Attested AI Agent
+# Prompt Oracle
 
-Run an LLM inside a TEE and get cryptographically signed responses. Verifiers can confirm on-chain that a specific prompt produced a specific response, with no tampering.
+A TEE-attested AI oracle on Base. Anyone submits a prompt, a TEE-hosted LLM
+answers it, and the response carries a hardware-rooted signature chain that
+the contract verifies before storing it. The result is on-chain, replayable,
+and tamper-evident: the prompt that produced the response is exactly what
+was submitted, evaluated by the exact code attested by Intel TDX hardware.
 
-## How It Works
+PromptChancery is the substrate. BetMarket is one application built on it
+(see [BETMARKET_DESIGN.md](BETMARKET_DESIGN.md)); other dapps can use the
+same primitive without coordinating.
+
+## What this proves
+
+A `Fulfilled` prompt on chain implies all of the following:
+
+- The submitted `prompt` string was passed unmodified to the LLM — no hidden
+  system prompt, no rewriting between request and response.
+- The `response` string was generated inside the TEE and was not altered
+  before being signed.
+- The signing key was derived inside the TEE from a measurement-bound KMS,
+  rooted at Intel's SGX/TDX attestation root.
+- The TEE was running the exact source code whose hash is committed in the
+  Phala dstack `app_id` (`0xa777f1080…` for the live deployment).
+
+What this does **not** prove: that the LLM's answer is *correct*. The
+oracle is an attested wrapper, not an authority on truth.
+
+## Architecture
+
+![PromptChancery architecture and lifecycle](docs/architecture.png)
+
+The system has three actors:
+
+- **User** — submits prompts and reads results from the chain. Any wallet.
+- **Chancery.sol** — `PromptChancery` on Base. Stores prompts, verifies
+  TEE signatures, stores responses.
+- **Notary Agent** — a single off-chain operator that runs both:
+  - **Notary Relay** — Node.js process. Watches `PromptRequested` events,
+    decides which to take, calls `commitToPrompt`, calls the Notary Core,
+    and submits the resulting proof on chain. Holds an EOA key for paying
+    gas. **Untrusted by the contract.**
+  - **Notary Core** — code running inside a Phala TDX enclave. Receives a
+    prompt, calls the LLM, signs `keccak256(prompt, response, timestamp)`
+    with a key derived inside the TEE from a KMS root.
+
+The relay and core are co-deployed and operated by the same party, but
+trust is isolated to the TEE half. Even the operator who runs the agent
+cannot forge a response: the only key they hold is the relay's gas-payer
+EOA, which has no signing authority over responses. The signing key
+lives inside their own enclave, attested by Phala dstack against an
+Intel TDX root, and they can't read it out.
+
+A malicious agent can refuse to serve, delay, or cherry-pick which
+prompts to fulfill — but cannot lie about a response. Anyone can run an
+agent; the contract checks the TEE proof regardless of who submits it.
+
+## Request lifecycle
+
+The numbered arrows in the diagram above:
+
+1. **`submitPrompt(prompt, executeAt, deadline)`** — user opens a prompt
+   on chain. Status becomes `Open`.
+2. **listen** — the relay subscribes to `PromptRequested` (WebSocket if
+   configured, else 60s polling fallback).
+3. **decide to commit** — relay-internal logic: filter by execution
+   window, agent capacity, etc. Multiple agents may compete; the first
+   to commit wins.
+4. **`commitToPrompt(promptId)`** — relay claims the prompt on chain.
+   Status becomes `Committed`. Then waits until `promptAfter`.
+5. **prompt** — relay forwards the prompt to the Notary Core via
+   `POST /prompt`. In the live deployment this hop is HTTPS to the
+   Phala-hosted enclave; in tighter setups the relay can run inside the
+   same VM and call localhost.
+6. **result + proof** — Notary Core calls the LLM, signs the
+   `(prompt, response, timestamp)` hash with its TEE-derived key, and
+   returns the response plus the full signature chain (derived → app →
+   KMS root).
+7. **`submitProof(promptId, …)`** — relay submits the response and proof
+   on chain. PromptChancery verifies the chain inline (three
+   `ecrecover`s) and, on success, sets status to `Fulfilled` and stores
+   the response.
+
+State machine:
 
 ```
-User sends prompt
-  │
-  ▼
-TD (TEE):
-  1. Receives prompt via POST /prompt
-  2. Runs: pi -p "<prompt>" (calls Claude via Anthropic API)
-  3. Captures response
-  4. Signs { prompt, response, timestamp } with KMS-derived key
-  │
-  ▼
-Verifier:
-  Checks signature chain → KMS root → app key → derived key → signed data
-  "This exact prompt produced this exact response inside audited code on real TDX hardware"
+              commitToPrompt        submitProof
+   Open ───────────────────────► Committed ──────► Fulfilled
+    │
+    │ cancelPrompt
+    ▼
+  Cancelled
 ```
 
-## What This Proves
+A prompt that is not `Fulfilled` by `deadline` is treated as expired (view
+function `isExpired` reflects this; no explicit on-chain transition).
 
-- The code is auditable (compose hash attested)
-- The prompt was passed to pi exactly as submitted — no hidden system prompt injection
-- The response wasn't altered between generation and signing
-- Pi ran with `--no-tools --no-session --no-extensions` (pure prompt, no agent actions)
+## Live deployment
 
-## Prerequisites
+| | |
+|---|---|
+| Network | Base mainnet (chain id 8453) |
+| PromptChancery | [`0xE453E01aEF962A836a0B78AbB91a18f01C3d8160`](https://basescan.org/address/0xE453E01aEF962A836a0B78AbB91a18f01C3d8160) |
+| KMS root (anchored by contract) | `0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51` |
+| Notary Core (TDX) app id | `a777f10802d5886c2f5a457fc12bbfce27005be1` |
+| Notary Core URL | `https://a777f10802d5886c2f5a457fc12bbfce27005be1-8080.dstack-base-prod5.phala.network` |
+| Notary signer (derived inside the enclave) | `0xb86fD15Ac6d4DD4Fcb404eB0b69B35D7EcfFADA7` |
+| LLM | Grok 4.20 via xAI API (`grok-4.20-0309-reasoning`) |
 
-- Docker
-- Node.js
-- [Phala CLI](https://docs.phala.network/) (`npm install -g @phala/cloud-cli`)
-- [Foundry](https://getfoundry.sh/) (for on-chain verification)
-- Python 3 with `eth-keys` and `eth-utils` (`pip install eth-keys eth-utils`)
-- An Anthropic API key (`ANTHROPIC_API_KEY`)
-- A wallet with ETH on Base (for contract deployment)
+The contract stores `kmsRoot` and `appId` as immutables, set at
+construction. Any prompt submitted to a different KMS or a different app
+build will fail signature verification.
 
-## Test Locally (Simulator)
+## What's in the repo
 
-### 1. Start the simulator
+```
+prompt-oracle/
+├── PromptChancery.sol     # On-chain prompt board (the substrate)
+├── TeeVerifier.sol        # Standalone signature-chain verifier (library style)
+├── BetMarket.sol          # Example dapp on top — see BETMARKET_DESIGN.md
+├── docker-compose.yaml    # Notary Core image (compose-hash attested by Phala)
+├── notary-relay.mjs       # Notary Relay: events ↔ Core ↔ proof
+├── script/                # forge scripts (BetMarket deploy)
+├── test/                  # forge unit tests
+├── ui/                    # Next.js app at https://prompt-oracle.vercel.app
+├── DESIGN.md              # PromptChancery design notes
+└── BETMARKET_DESIGN.md    # BetMarket design notes
+```
+
+## Verifying a fulfilled prompt
+
+Anyone can re-derive the signature chain off-chain to audit a single
+fulfilled prompt without trusting the contract:
 
 ```bash
+PROMPT_ID=42
+
+# 1. Pull the on-chain fulfillment
+cast call --rpc-url https://mainnet.base.org \
+  0xE453E01aEF962A836a0B78AbB91a18f01C3d8160 \
+  'getFulfillment(uint256)(address,string,uint256)' "$PROMPT_ID"
+
+# 2. The contract already verified the chain at submission time, but to
+#    audit independently: feed messageHash + signatures into TeeVerifier or
+#    re-derive in Python with eth_keys (see the simulator section below).
+```
+
+The verification reduces to three `ecrecover`s:
+
+1. `messageSignature` over `keccak256(prompt, response, timestamp)` →
+   recovers the TEE-derived address.
+2. `appSignature` over `"ethereum:" || derivedPubkey` → recovers the
+   app-key address.
+3. `kmsSignature` over `"dstack-kms-issued:" || appId || appPubkey` →
+   must equal the KMS root pinned in the contract's immutable.
+
+If all three hold and the recovered derived address matches the one that
+signed `messageSignature`, the response is provably from this exact
+TEE+app combination.
+
+## Running it yourself
+
+### Prerequisites
+
+- Docker + Phala CLI (`npm install -g @phala/cloud-cli`)
+- Node.js 20+
+- Foundry (`curl -L https://foundry.paradigm.xyz | bash`)
+- An xAI API key (`XAI_API_KEY`)
+- A wallet with Base ETH (for contract deploy + relay gas)
+
+### 1. Notary Core locally (TDX simulator)
+
+```bash
+# Start the dstack simulator
 phala simulator start
-```
 
-### 2. Build and run
-
-```bash
-docker buildx use default
+# Build and run the oracle
 docker compose build app
-
 docker run --rm -p 8080:8080 \
   -e DSTACK_SIMULATOR_ENDPOINT=/var/run/dstack.sock \
-  -e XAI_API_KEY=xai-... \
+  -e XAI_API_KEY=xai-… \
   -v ~/.phala-cloud/simulator/0.5.3/dstack.sock:/var/run/dstack.sock \
   prompt-oracle-app
-```
-
-### 3. Test
-
-```bash
-# App info
-curl http://localhost:8080/
 
 # Send a prompt
-curl -X POST -d '{"prompt":"What is 2+2? Answer in one word."}' http://localhost:8080/prompt
+curl -X POST -d '{"prompt":"What is 2+2? Answer in one word."}' \
+  http://localhost:8080/prompt
 ```
 
 Example response:
@@ -79,209 +198,129 @@ Example response:
     "response": "Four",
     "timestamp": 1776320182544
   },
-  "messageHash": "0x4236...",
-  "signature": "0xa499...",
+  "messageHash": "0x4236…",
+  "signature": "0xa499…",
   "signatureChain": {
-    "derivedPubkey": "0x02ed...",
-    "appSignature": "0x373a...",
-    "kmsSignature": "0x2f43..."
+    "derivedPubkey": "0x02ed…",
+    "appSignature": "0x373a…",
+    "kmsSignature": "0x2f43…"
   },
   "signerAddress": "0x2295a3B84F1EFBE032562A1976BaA101aF42213b"
 }
 ```
 
-### 4. Verify signature chain (simulator)
+The simulator's KMS root is `0x8f2cF602C9695b23130367ed78d8F557554de7C5`,
+which is different from the production root above. The README's git
+history shows a `python3` snippet for verifying simulator responses
+end-to-end if you want to script it.
+
+### 2. Notary Core on Phala (real TDX)
 
 ```bash
-# Save a response first
-curl -s -X POST -d '{"prompt":"hello"}' http://localhost:8080/prompt > response.json
-
-# Simulator KMS root: 0x8f2cF602C9695b23130367ed78d8F557554de7C5
-python3 -c "
-from eth_keys import keys
-from eth_utils import keccak
-import json
-
-data = json.load(open('response.json'))
-chain = data['signatureChain']
-
-# Step 1: Recover app pubkey from app signature
-derived_pubkey = chain['derivedPubkey'].replace('0x', '')
-app_sig = chain['appSignature'].replace('0x', '')
-msg = f'ethereum:{derived_pubkey}'
-msg_hash = keccak(text=msg)
-sig = keys.Signature(bytes.fromhex(app_sig))
-app_pubkey = sig.recover_public_key_from_msg_hash(msg_hash)
-print(f'Step 1 - App address: {app_pubkey.to_checksum_address()}')
-
-# Step 2: Verify KMS signature
-app_id = data.get('appId', '')
-kms_sig = chain['kmsSignature'].replace('0x', '')
-kms_message = b'dstack-kms-issued:' + bytes.fromhex(app_id) + app_pubkey.to_compressed_bytes()
-kms_hash = keccak(kms_message)
-kms_sig_obj = keys.Signature(bytes.fromhex(kms_sig))
-recovered_kms = kms_sig_obj.recover_public_key_from_msg_hash(kms_hash)
-print(f'Step 2 - KMS root: {recovered_kms.to_checksum_address()}')
-print(f'         Expected: 0x8f2cF602C9695b23130367ed78d8F557554de7C5')
-print(f'         Match: {recovered_kms.to_checksum_address() == \"0x8f2cF602C9695b23130367ed78d8F557554de7C5\"}')
-"
-```
-
-### 5. Clean up
-
-If you ran in the foreground, just Ctrl+C. If you ran with `-d` (background):
-
-```bash
-docker stop $(docker ps -q --filter ancestor=prompt-oracle-app)
-```
-
-To stop the simulator:
-
-```bash
-phala simulator stop
-```
-
-## Deploy to Phala Cloud (Real TDX + Base)
-
-### 1. Deploy
-
-```bash
-export PRIVATE_KEY="0x<your-key-with-ETH-on-Base>"
+export PRIVATE_KEY="0x<wallet-with-Base-ETH>"
 
 phala deploy -n prompt-oracle -c docker-compose.yaml \
   --kms base \
   --private-key "$PRIVATE_KEY" \
-  -e XAI_API_KEY=xai-...
-```
+  -e XAI_API_KEY=xai-…
 
-Save the **App ID** from the output. The deploy command also creates an AppAuth contract on Base.
-
-### 2. Wait for CVM to come online
-
-```bash
+# Note the App ID from the output. Wait until status is "running":
 phala cvms get prompt-oracle --json | jq '.status'
-# Wait until "running" — may take several minutes (npm install inside TD)
-```
 
-### 3. Test
-
-```bash
-# App info
+# Then test against the real endpoint:
 curl https://<appId>-8080.dstack-base-prod5.phala.network/
-
-# Send a prompt and save response
-curl -s -X POST \
-  -d '{"prompt":"What is 2+2? Answer in one word."}' \
-  https://<appId>-8080.dstack-base-prod5.phala.network/prompt > response.json
-
-cat response.json | python3 -m json.tool
 ```
 
-### 4. Recover app pubkey
+### 3. Deploy your own PromptChancery
+
+Only needed if you want a separate prompt board (e.g., your own KMS-rooted
+contract). For most use cases you'd reuse the live deployment above.
 
 ```bash
-python3 -c "
-from eth_keys import keys
-from eth_utils import keccak
-import json
-
-data = json.load(open('response.json'))
-chain = data['signatureChain']
-
-derived_pubkey = chain['derivedPubkey'].replace('0x', '')
-app_sig = chain['appSignature'].replace('0x', '')
-
-msg = f'ethereum:{derived_pubkey}'
-msg_hash = keccak(text=msg)
-sig = keys.Signature(bytes.fromhex(app_sig))
-app_pubkey = sig.recover_public_key_from_msg_hash(msg_hash)
-print(f'App pubkey: 0x{app_pubkey.to_compressed_bytes().hex()}')
-"
-```
-
-Save the output — you'll need it for on-chain verification.
-
-### 5. Deploy TeeVerifier.sol to Base
-
-```bash
-# Pad your appId to bytes32 (append zeros to 64 hex chars)
-# Example: appId "d0d6e8e3..." → "0xd0d6e8e3...000000000000000000000000"
-
-forge create TeeVerifier.sol:TeeVerifier \
-  --broadcast \
+forge create PromptChancery.sol:PromptChancery \
   --rpc-url https://mainnet.base.org \
-  --private-key $PRIVATE_KEY \
+  --private-key "$PRIVATE_KEY" \
+  --broadcast \
   --constructor-args \
     0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51 \
     0x<appId>000000000000000000000000
 ```
 
-Save the **Deployed to** address.
+### 4. Run a Notary Relay
 
-### 6. Verify on-chain
-
-Extract values from response.json:
-
-```bash
-cat response.json | jq -r '"messageHash: " + .messageHash, "signature: " + .signature, "appSignature: " + .signatureChain.appSignature, "kmsSignature: " + .signatureChain.kmsSignature, "derivedPubkey: " + .signatureChain.derivedPubkey'
-```
-
-Call verify on Base (replace values from above + app pubkey from step 4):
+The relay is the off-chain process that watches the contract, calls the
+Notary Core, and submits proofs.
 
 ```bash
-cast call <DEPLOYED_CONTRACT> \
-  "verify(bytes32,bytes,bytes,bytes,bytes,bytes,string)(bool)" \
-  <messageHash> \
-  <signature> \
-  <appSignature> \
-  <kmsSignature> \
-  <derivedPubkey> \
-  <appPubkey> \
-  "ethereum" \
-  --rpc-url https://mainnet.base.org
+# Configure (creates .env.relay; gitignored)
+cat > .env.relay <<'EOF'
+PRIVATE_KEY=0x<relay-wallet-with-Base-ETH>
+RPC_URL=https://mainnet.base.org
+WS_URL=                # optional; enables real-time PromptRequested events
+CONTRACT_ADDRESS=0xE453E01aEF962A836a0B78AbB91a18f01C3d8160
+TEE_URL=https://a777f10802d5886c2f5a457fc12bbfce27005be1-8080.dstack-base-prod5.phala.network
+EOF
+
+npm install
+node notary-relay.mjs
 ```
 
-Should return `true`.
+The relay polls every 60s as a fallback if `WS_URL` is unset. Multiple
+relays can run simultaneously without conflicts — the first to commit a
+prompt wins; the others see "already committed" and move on.
 
-### 7. Clean up
+## Why Grok / xAI
 
-```bash
-phala cvms delete prompt-oracle
-```
+Grok was chosen because xAI's `responses` API exposes both `web_search`
+and `x_search` tools, making the oracle useful for questions about
+real-world events ("did X happen?") without giving the LLM agent
+capabilities. The TEE strips everything else: no file I/O, no shell, no
+session, no plugins.
 
-## Files
+Swapping the model is a contract-incompatible change: the deployed
+PromptChancery's `kmsRoot` + `appId` are pinned to this exact compose
+build. A different LLM means a different image, different `app_id`,
+different signing chain → existing verifiers won't accept the new TEE's
+proofs. Wire-compatible alternatives (Claude, GPT, etc.) need a fresh
+deployment.
 
-```
-prompt-oracle/
-├── docker-compose.yaml    # Build config, env vars, inline app code
-├── TeeVerifier.sol        # On-chain signature verification contract
-├── foundry.toml           # Foundry config for contract compilation
-└── README.md
-```
+## Future extensions
 
-## Key Addresses
+PromptChancery is intentionally minimal: an open commit-and-fulfill
+board with no economic incentives or notary management. Real-world use
+will want some of these:
+
+- **Slashing for stale commitments.** A notary that calls
+  `commitToPrompt` but never submits proof currently faces no penalty —
+  the prompt just expires at `deadline`. Add a stake requirement on
+  commit and forfeit it on timeout, refunding the requester or paying
+  it to a competing notary that fulfills the prompt.
+- **Notary fees.** Today notaries pay gas with no compensation. Let the
+  requester escrow a fee at `submitPrompt` time, paid to whoever submits
+  the valid proof.
+- **Notary allowlist per prompt.** Some apps want a specific notary set
+  (e.g., a federation, a reputation-staked group). Currently anyone can
+  notarize.
+- **Multiple fulfillments per prompt.** The first valid proof wins
+  today. For higher confidence, accept *N* independent proofs from
+  different TEEs and require agreement.
+- **Commitment expiration.** A stale `Committed` prompt blocks other
+  notaries. Allow forced re-opening after a timeout.
+- **Max response length / categories / tags.** Useful for indexers and
+  for capping pathological prompts.
+- **Multi-chain / L2-bridged proofs.** The signature chain is
+  chain-agnostic; verifying it on another rollup is mostly a matter of
+  redeploying `TeeVerifier.sol` there.
+- **Permit / Permit2 entry points.** For dapps that take user funds in
+  the same flow as a prompt request, gasless approval would remove a
+  popup and a tx.
+
+## Key addresses
 
 | | Address |
 |---|---|
-| KMS Root (Simulator) | `0x8f2cF602C9695b23130367ed78d8F557554de7C5` |
-| KMS Root (Base) | `0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51` |
+| KMS root (Base) | `0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51` |
+| KMS root (simulator) | `0x8f2cF602C9695b23130367ed78d8F557554de7C5` |
 | DstackKms (Base) | `0x2f83172A49584C017F2B256F0FB2Dca14126Ba9C` |
-
-## Pi Agent Flags
-
-The oracle runs pi with these flags for auditability:
-
-| Flag | Purpose |
-|---|---|
-| `-p` | Non-interactive print mode |
-| `--provider anthropic` | Uses Claude via Anthropic API |
-| `--model claude-sonnet-4-20250514` | Specific model version |
-| `--no-tools` | No file read/write/bash (pure prompt) |
-| `--no-session` | No state between calls |
-| `--no-extensions` | No plugins |
-| `--no-skills` | No skill files |
-| `--no-prompt-templates` | No prompt templates |
-| `--no-themes` | No themes |
-| `--mode text` | Plain text output |
-
-A verifier can audit the source code and confirm these flags are used — the TEE attestation proves this exact code is running.
+| Live PromptChancery | `0xE453E01aEF962A836a0B78AbB91a18f01C3d8160` |
+| Live notary signer (in TEE) | `0xb86fD15Ac6d4DD4Fcb404eB0b69B35D7EcfFADA7` |
