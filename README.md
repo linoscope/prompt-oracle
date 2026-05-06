@@ -10,25 +10,7 @@ PromptChancery is the substrate. BetMarket is one application built on it
 (see [BETMARKET_DESIGN.md](BETMARKET_DESIGN.md)); other dapps can use the
 same primitive without coordinating.
 
-## What this proves
-
-A `Fulfilled` prompt on chain implies all of the following:
-
-- The submitted `prompt` string was passed unmodified to the LLM — no hidden
-  system prompt, no rewriting between request and response.
-- The `response` string was generated inside the TEE and was not altered
-  before being signed.
-- The signing key was derived inside the TEE from a measurement-bound KMS,
-  rooted at Intel's SGX/TDX attestation root.
-- The TEE was running the exact source code whose hash is committed in the
-  Phala dstack `app_id` (`0xa777f1080…` for the live deployment).
-
-What this does **not** prove: that the LLM's answer is *correct*. The
-oracle is an attested wrapper, not an authority on truth.
-
 ## Architecture
-
-![PromptChancery architecture and lifecycle](docs/architecture.png)
 
 The system has three actors:
 
@@ -44,18 +26,7 @@ The system has three actors:
     prompt, calls the LLM, signs `keccak256(prompt, response, timestamp)`
     with a key derived inside the TEE from a KMS root.
 
-The relay and core are co-deployed and operated by the same party, but
-trust is isolated to the TEE half. Even the operator who runs the agent
-cannot forge a response: the only key they hold is the relay's gas-payer
-EOA, which has no signing authority over responses. The signing key
-lives inside their own enclave, attested by Phala dstack against an
-Intel TDX root, and they can't read it out.
-
-A malicious agent can refuse to serve, delay, or cherry-pick which
-prompts to fulfill — but cannot lie about a response. Anyone can run an
-agent; the contract checks the TEE proof regardless of who submits it.
-
-## Request lifecycle
+![PromptChancery architecture and lifecycle](docs/architecture.png)
 
 The numbered arrows in the diagram above:
 
