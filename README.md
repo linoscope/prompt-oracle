@@ -48,7 +48,9 @@ The numbered arrows in the diagram above:
    returns the response plus the full signature chain (derived → app →
    KMS root).
 7. **`submitProof(promptId, …)`** — relay submits the response and proof
-   on chain. PromptChancery verifies the chain inline (three
+   on chain. PromptChancery rebuilds the signed hash from the stored
+   prompt, the submitted response and the TEE's timestamp (which must be
+   at or after `promptAfter`), verifies the chain inline (three
    `ecrecover`s) and, on success, sets status to `Fulfilled` and stores
    the response.
 

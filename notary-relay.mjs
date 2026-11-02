@@ -46,7 +46,7 @@ const abi = parseAbi([
   "event PromptRequested(uint256 indexed promptId, address requester, string prompt, uint256 promptAfter, uint256 deadline)",
   "event PromptFulfilled(uint256 indexed promptId, address notary, string response)",
   "function commitToPrompt(uint256 promptId)",
-  "function submitProof(uint256 promptId, string response, bytes32 messageHash, bytes messageSignature, bytes appSignature, bytes kmsSignature, bytes derivedCompressedPubkey, bytes appCompressedPubkey)",
+  "function submitProof(uint256 promptId, string response, uint256 timestamp, bytes messageSignature, bytes appSignature, bytes kmsSignature, bytes derivedCompressedPubkey, bytes appCompressedPubkey)",
   "function nextPromptId() view returns (uint256)",
   "function getCommitment(uint256 promptId) view returns (address notary)",
   "function getPrompt(uint256 promptId) view returns (address requester, string prompt, uint256 createdAt, uint256 promptAfter, uint256 deadline, uint8 status)",
@@ -181,7 +181,7 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline, alreadyComm
       args: [
         promptId,
         teeResponse.statement.response,
-        teeResponse.messageHash,
+        BigInt(teeResponse.statement.timestamp),
         teeResponse.signature,
         teeResponse.signatureChain.appSignature,
         teeResponse.signatureChain.kmsSignature,

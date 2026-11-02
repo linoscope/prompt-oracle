@@ -95,7 +95,7 @@ contract PromptChancery {
     function submitProof(
         uint256 promptId,
         string calldata response,
-        bytes32 messageHash,
+        uint256 timestamp,
         bytes calldata messageSignature,
         bytes calldata appSignature,
         bytes calldata kmsSignature,
@@ -109,6 +109,14 @@ contract PromptChancery {
 
         Commitment storage c = commitments[promptId];
         require(c.notary == msg.sender, "not committed notary");
+
+        // The TEE stamps its answer in milliseconds; an answer from before the
+        // window opened can't be held back and submitted later
+        require(timestamp >= p.promptAfter * 1000, "answered too early");
+
+        // Rebuild what the TEE signs from the stored prompt, so the signature
+        // vouches for this response to this prompt and nothing else
+        bytes32 messageHash = keccak256(abi.encodePacked(p.prompt, response, timestamp));
 
         // Verify TEE signature chain
         require(
