@@ -4,8 +4,9 @@ import { base } from "viem/chains"
 import { CONTRACT_ADDRESS } from "../../src/app/contract"
 
 // Tag each run with a nonce so we can find OUR submission unambiguously even when
-// public Base RPC read-lag delays the page's nextPromptId refetch.
-const TEST_PROMPT = `What is 2+2? (e2e ${Date.now()})`
+// public Base RPC read-lag delays the page's nextPromptId refetch. E2E_PROMPT
+// overrides it (e.g. to rehearse a demo prompt); it must not already be on chain.
+const TEST_PROMPT = process.env.E2E_PROMPT || `What is 2+2? (e2e ${Date.now()})`
 const RPC = process.env.BASE_RPC || "https://mainnet.base.org"
 const ABI = parseAbi(["function nextPromptId() view returns (uint256)"])
 
