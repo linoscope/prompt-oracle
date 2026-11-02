@@ -1,6 +1,6 @@
 import { test as base, type BrowserContext, type Page } from "@playwright/test"
 import { config as loadEnv } from "dotenv"
-import { createPublicClient, createWalletClient, http } from "viem"
+import { createPublicClient, createWalletClient, http, parseGwei, type PublicClient } from "viem"
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts"
 import { base as baseChain } from "viem/chains"
 
@@ -12,6 +12,21 @@ const BASE_RPC = process.env.BASE_RPC || "https://mainnet.base.org"
 
 if (!CREATOR_PK) {
   throw new Error("TEST_PK missing — populate .env.test")
+}
+
+// Base's sequencer skips txs tipping below what recent blocks include (~0.007
+// gwei), while eth_maxPriorityFeePerGas can suggest 0.001. Such txs get a hash
+// back but never mine, and then block the nonce. Tip at the recent median,
+// floored, with headroom over the base fee.
+const MIN_TIP = parseGwei("0.01")
+
+async function feeOverrides(pub: Pick<PublicClient, "getFeeHistory">) {
+  const fh = await pub.getFeeHistory({ blockCount: 10, rewardPercentiles: [50] })
+  const tips = fh.reward!.map((r) => r[0]).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  const median = tips[Math.floor(tips.length / 2)] ?? 0n
+  const maxPriorityFeePerGas = median > MIN_TIP ? median : MIN_TIP
+  const baseFee = fh.baseFeePerGas[fh.baseFeePerGas.length - 1]
+  return { maxPriorityFeePerGas, maxFeePerGas: baseFee * 2n + maxPriorityFeePerGas }
 }
 
 /**
@@ -61,7 +76,11 @@ export async function injectBurner(
         }
         case "eth_sendTransaction": {
           const [tx] = params as [Parameters<typeof wallet.sendTransaction>[0]]
-          return await wallet.sendTransaction(tx)
+          return await wallet.sendTransaction({
+            ...tx,
+            type: "eip1559",
+            ...(await feeOverrides(pub)),
+          } as Parameters<typeof wallet.sendTransaction>[0])
         }
         default:
           return await pub.transport.request({ method, params })

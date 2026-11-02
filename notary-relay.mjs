@@ -18,7 +18,7 @@
 import { config as loadEnv } from "dotenv"
 loadEnv({ path: ".env.relay" })
 
-import { createPublicClient, createWalletClient, http, webSocket, parseAbi, keccak256, encodePacked, toHex, hexToBytes, recoverPublicKey } from "viem"
+import { createPublicClient, createWalletClient, http, webSocket, parseAbi, parseGwei, keccak256, encodePacked, toHex, hexToBytes, recoverPublicKey } from "viem"
 import { base } from "viem/chains"
 import { privateKeyToAccount } from "viem/accounts"
 
@@ -72,6 +72,21 @@ async function recoverAppPubkey(derivedPubkeyHex, appSignatureHex) {
   return toHex(compressed)
 }
 
+// Base's sequencer skips txs tipping below what recent blocks include (~0.007
+// gwei), while eth_maxPriorityFeePerGas can suggest 0.001. Such txs get a hash
+// back but never mine, and then block the nonce. Tip at the recent median,
+// floored, with headroom over the base fee.
+const MIN_TIP = parseGwei("0.01")
+
+async function feeOverrides() {
+  const fh = await publicClient.getFeeHistory({ blockCount: 10, rewardPercentiles: [50] })
+  const tips = fh.reward.map((r) => r[0]).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  const median = tips[Math.floor(tips.length / 2)] ?? 0n
+  const maxPriorityFeePerGas = median > MIN_TIP ? median : MIN_TIP
+  const baseFee = fh.baseFeePerGas[fh.baseFeePerGas.length - 1]
+  return { maxPriorityFeePerGas, maxFeePerGas: baseFee * 2n + maxPriorityFeePerGas }
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -106,6 +121,7 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline, alreadyComm
         abi,
         functionName: "commitToPrompt",
         args: [promptId],
+        ...(await feeOverrides()),
       })
       console.log(`  Committed: ${commitHash}`)
       await publicClient.waitForTransactionReceipt({ hash: commitHash })
@@ -172,6 +188,7 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline, alreadyComm
         teeResponse.signatureChain.derivedPubkey,
         appPubkey,
       ],
+      ...(await feeOverrides()),
     })
     console.log(`  Proof submitted: ${submitHash}`)
     const receipt = await publicClient.waitForTransactionReceipt({ hash: submitHash })
