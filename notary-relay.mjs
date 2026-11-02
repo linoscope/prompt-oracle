@@ -48,6 +48,7 @@ const abi = parseAbi([
   "function commitToPrompt(uint256 promptId)",
   "function submitProof(uint256 promptId, string response, bytes32 messageHash, bytes messageSignature, bytes appSignature, bytes kmsSignature, bytes derivedCompressedPubkey, bytes appCompressedPubkey)",
   "function nextPromptId() view returns (uint256)",
+  "function getCommitment(uint256 promptId) view returns (address notary)",
   "function getPrompt(uint256 promptId) view returns (address requester, string prompt, uint256 createdAt, uint256 promptAfter, uint256 deadline, uint8 status)",
 ])
 
@@ -75,7 +76,17 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function handlePrompt(promptId, prompt, promptAfter, deadline) {
+async function isCommittedByUs(promptId) {
+  const notary = await publicClient.readContract({
+    address: CONTRACT_ADDRESS,
+    abi,
+    functionName: "getCommitment",
+    args: [promptId],
+  })
+  return notary.toLowerCase() === account.address.toLowerCase()
+}
+
+async function handlePrompt(promptId, prompt, promptAfter, deadline, alreadyCommitted = false) {
   const id = Number(promptId)
   if (handledPrompts.has(id)) return
   handledPrompts.add(id)
@@ -84,21 +95,32 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline) {
   console.log(`  Prompt: "${prompt}"`)
   console.log(`  Window: ${new Date(Number(promptAfter) * 1000).toISOString()} → ${new Date(Number(deadline) * 1000).toISOString()}`)
 
-  // Step 1: Commit
-  console.log(`  Committing...`)
-  try {
-    const commitHash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS,
-      abi,
-      functionName: "commitToPrompt",
-      args: [promptId],
-    })
-    console.log(`  Committed: ${commitHash}`)
-    await publicClient.waitForTransactionReceipt({ hash: commitHash })
-  } catch (e) {
-    console.error(`  Failed to commit: ${e.message}`)
-    handledPrompts.delete(id)
-    return
+  // Step 1: Commit (skipped when resuming a prompt we already committed to)
+  if (alreadyCommitted) {
+    console.log(`  Already committed by us, resuming`)
+  } else {
+    console.log(`  Committing...`)
+    try {
+      const commitHash = await walletClient.writeContract({
+        address: CONTRACT_ADDRESS,
+        abi,
+        functionName: "commitToPrompt",
+        args: [promptId],
+      })
+      console.log(`  Committed: ${commitHash}`)
+      await publicClient.waitForTransactionReceipt({ hash: commitHash })
+    } catch (e) {
+      // An RPC timeout can hide a commit that actually landed; check the chain
+      // before giving up so the prompt isn't stranded in Committed.
+      console.error(`  Commit call errored: ${e.shortMessage || e.message}`)
+      await sleep(5000)
+      if (!(await isCommittedByUs(promptId).catch(() => false))) {
+        console.error(`  Not committed on chain, giving up`)
+        handledPrompts.delete(id)
+        return
+      }
+      console.log(`  Commit landed on chain anyway, continuing`)
+    }
   }
 
   // Step 2: Wait for promptAfter
@@ -178,10 +200,15 @@ async function pollForNewPrompts() {
       args: [BigInt(i)],
     })
 
-    // Status 0 = Open, and not expired
-    if (Number(status) === 0 && BigInt(Math.floor(Date.now() / 1000)) <= deadline) {
+    if (BigInt(Math.floor(Date.now() / 1000)) > deadline) continue
+
+    // Status 0 = Open; status 1 = Committed, which we resume if the commitment is ours
+    if (Number(status) === 0) {
       console.log(`Poll: Found open prompt #${i}`)
       handlePrompt(BigInt(i), prompt, promptAfter, deadline)
+    } else if (Number(status) === 1 && !handledPrompts.has(i) && await isCommittedByUs(BigInt(i))) {
+      console.log(`Poll: Found prompt #${i} committed by us but unfulfilled`)
+      handlePrompt(BigInt(i), prompt, promptAfter, deadline, true)
     }
   }
 
