@@ -114,7 +114,10 @@ function ResolutionPanel({
   return (
     <div className="bg-gray-800 rounded p-4 mt-4 border border-gray-700">
       <div className="text-sm text-gray-400 mb-2">
-        Oracle prompt: <span className="font-mono">#{promptId.toString()}</span>
+        Oracle prompt:{" "}
+        <Link href={`/prompts/${promptId}`} className="font-mono text-blue-400 hover:underline">
+          #{promptId.toString()}
+        </Link>
       </div>
       {fulfilled ? (
         <>

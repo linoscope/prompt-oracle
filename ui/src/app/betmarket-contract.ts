@@ -1,4 +1,4 @@
-export const BETMARKET_ADDRESS = "0xEe764A57b0525B76E3B3160A29c5d6F2Af2Df071" as const
+export const BETMARKET_ADDRESS = "0x6F6987F02Ae9d5a46c87043fE8c5c69E3dF2498d" as const
 
 // Base USDC — used for approve() before createBet/acceptBet.
 export const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const

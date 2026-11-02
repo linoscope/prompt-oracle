@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { ConnectKitButton } from "connectkit"
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { useQueryClient } from "@tanstack/react-query"
@@ -125,7 +126,9 @@ function PromptCard({ promptId }: { promptId: number }) {
   return (
     <div className="bg-gray-900 rounded-lg p-5 border border-gray-800">
       <div className="flex justify-between items-start mb-3">
-        <span className="text-xs text-gray-500 font-mono">#{promptId}</span>
+        <Link href={`/prompts/${promptId}`} className="text-xs text-gray-500 hover:text-blue-400 font-mono">
+          #{promptId} →
+        </Link>
         <span className={`text-xs font-semibold ${statusColor}`}>{displayStatus}</span>
       </div>
       <p className="text-gray-200 mb-3">{prompt}</p>

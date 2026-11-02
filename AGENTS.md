@@ -8,7 +8,7 @@ future agents will trip over if they aren't aware.
 
 | Piece | Where | Notes |
 |---|---|---|
-| `PromptChancery.sol` | `./PromptChancery.sol` | Deployed at `0xE453E01aEF962A836a0B78AbB91a18f01C3d8160` on Base mainnet |
+| `PromptChancery.sol` | `./PromptChancery.sol` | Deployed at `0xF6c9fdb1Eb486662984F792e3881162c63588308` on Base mainnet |
 | Notary relay | `./notary-relay.mjs` | Watches contract via WS + polling fallback (60s); calls TEE; submits proof |
 | TEE oracle | `./docker-compose.yaml` | Runs in a dstack TDX container, calls `https://api.x.ai/v1/responses` (Grok) |
 | UI | `./ui/` | Next.js, wagmi + ConnectKit, talks to Base mainnet only |
@@ -37,7 +37,7 @@ cd ui
 npm run dev
 
 # Terminal 2 (optional but expected): notary relay
-PRIVATE_KEY=… CONTRACT_ADDRESS=0xE453E01aEF962A836a0B78AbB91a18f01C3d8160 \
+PRIVATE_KEY=… CONTRACT_ADDRESS=0xF6c9fdb1Eb486662984F792e3881162c63588308 \
   TEE_URL=https://… WS_URL=wss://… \
   node notary-relay.mjs
 

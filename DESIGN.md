@@ -85,8 +85,8 @@ commitToPrompt(uint256 promptId)
 submitProof(
     uint256 promptId,
     string response,
-    bytes32 messageHash,
-    bytes messageSignature,
+    uint256 timestamp,          // TEE's answer time in ms; must be >= promptAfter
+    bytes messageSignature,     // over keccak256(prompt, response, timestamp), rebuilt on-chain
     bytes appSignature,
     bytes kmsSignature,
     bytes derivedCompressedPubkey,
@@ -186,7 +186,14 @@ A malicious relay could:
 
 A malicious relay cannot:
 - Forge a response (no TEE key)
-- Alter the prompt or response (signature chain verification fails)
+- Alter the prompt or response (the contract rebuilds the signed hash from the
+  stored prompt and the submitted response, so the signature chain fails)
+- Reuse a genuine TEE answer to a different prompt (same reason)
+- Fetch an answer before `promptAfter` and hold it back (the signed timestamp
+  must be at or after `promptAfter`)
+
+It can still ask the TEE several times and submit the answer it prefers; the
+TEE's `/prompt` endpoint is open and LLM output is not deterministic.
 
 ## Future Extensions
 

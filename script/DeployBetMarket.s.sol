@@ -14,7 +14,7 @@ import { BetMarket, IERC20, IPromptChancery } from "../BetMarket.sol";
 contract DeployBetMarket is Script {
     // Base mainnet
     address constant BASE_USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
-    address constant PROMPT_CHANCERY = 0xE453E01aEF962A836a0B78AbB91a18f01C3d8160;
+    address constant PROMPT_CHANCERY = 0xF6c9fdb1Eb486662984F792e3881162c63588308;
 
     function run() external returns (BetMarket bm) {
         uint256 pk = vm.envUint("PRIVATE_KEY");

@@ -18,7 +18,7 @@
 import { config as loadEnv } from "dotenv"
 loadEnv({ path: ".env.relay" })
 
-import { createPublicClient, createWalletClient, http, webSocket, parseAbi, keccak256, encodePacked, toHex, hexToBytes, recoverPublicKey } from "viem"
+import { createPublicClient, createWalletClient, http, webSocket, parseAbi, parseGwei, keccak256, encodePacked, toHex, hexToBytes, recoverPublicKey } from "viem"
 import { base } from "viem/chains"
 import { privateKeyToAccount } from "viem/accounts"
 
@@ -46,8 +46,9 @@ const abi = parseAbi([
   "event PromptRequested(uint256 indexed promptId, address requester, string prompt, uint256 promptAfter, uint256 deadline)",
   "event PromptFulfilled(uint256 indexed promptId, address notary, string response)",
   "function commitToPrompt(uint256 promptId)",
-  "function submitProof(uint256 promptId, string response, bytes32 messageHash, bytes messageSignature, bytes appSignature, bytes kmsSignature, bytes derivedCompressedPubkey, bytes appCompressedPubkey)",
+  "function submitProof(uint256 promptId, string response, uint256 timestamp, bytes messageSignature, bytes appSignature, bytes kmsSignature, bytes derivedCompressedPubkey, bytes appCompressedPubkey)",
   "function nextPromptId() view returns (uint256)",
+  "function getCommitment(uint256 promptId) view returns (address notary)",
   "function getPrompt(uint256 promptId) view returns (address requester, string prompt, uint256 createdAt, uint256 promptAfter, uint256 deadline, uint8 status)",
 ])
 
@@ -71,11 +72,36 @@ async function recoverAppPubkey(derivedPubkeyHex, appSignatureHex) {
   return toHex(compressed)
 }
 
+// Base's sequencer skips txs tipping below what recent blocks include (~0.007
+// gwei), while eth_maxPriorityFeePerGas can suggest 0.001. Such txs get a hash
+// back but never mine, and then block the nonce. Tip at the recent median,
+// floored, with headroom over the base fee.
+const MIN_TIP = parseGwei("0.01")
+
+async function feeOverrides() {
+  const fh = await publicClient.getFeeHistory({ blockCount: 10, rewardPercentiles: [50] })
+  const tips = fh.reward.map((r) => r[0]).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  const median = tips[Math.floor(tips.length / 2)] ?? 0n
+  const maxPriorityFeePerGas = median > MIN_TIP ? median : MIN_TIP
+  const baseFee = fh.baseFeePerGas[fh.baseFeePerGas.length - 1]
+  return { maxPriorityFeePerGas, maxFeePerGas: baseFee * 2n + maxPriorityFeePerGas }
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function handlePrompt(promptId, prompt, promptAfter, deadline) {
+async function isCommittedByUs(promptId) {
+  const notary = await publicClient.readContract({
+    address: CONTRACT_ADDRESS,
+    abi,
+    functionName: "getCommitment",
+    args: [promptId],
+  })
+  return notary.toLowerCase() === account.address.toLowerCase()
+}
+
+async function handlePrompt(promptId, prompt, promptAfter, deadline, alreadyCommitted = false) {
   const id = Number(promptId)
   if (handledPrompts.has(id)) return
   handledPrompts.add(id)
@@ -84,21 +110,33 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline) {
   console.log(`  Prompt: "${prompt}"`)
   console.log(`  Window: ${new Date(Number(promptAfter) * 1000).toISOString()} → ${new Date(Number(deadline) * 1000).toISOString()}`)
 
-  // Step 1: Commit
-  console.log(`  Committing...`)
-  try {
-    const commitHash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS,
-      abi,
-      functionName: "commitToPrompt",
-      args: [promptId],
-    })
-    console.log(`  Committed: ${commitHash}`)
-    await publicClient.waitForTransactionReceipt({ hash: commitHash })
-  } catch (e) {
-    console.error(`  Failed to commit: ${e.message}`)
-    handledPrompts.delete(id)
-    return
+  // Step 1: Commit (skipped when resuming a prompt we already committed to)
+  if (alreadyCommitted) {
+    console.log(`  Already committed by us, resuming`)
+  } else {
+    console.log(`  Committing...`)
+    try {
+      const commitHash = await walletClient.writeContract({
+        address: CONTRACT_ADDRESS,
+        abi,
+        functionName: "commitToPrompt",
+        args: [promptId],
+        ...(await feeOverrides()),
+      })
+      console.log(`  Committed: ${commitHash}`)
+      await publicClient.waitForTransactionReceipt({ hash: commitHash })
+    } catch (e) {
+      // An RPC timeout can hide a commit that actually landed; check the chain
+      // before giving up so the prompt isn't stranded in Committed.
+      console.error(`  Commit call errored: ${e.shortMessage || e.message}`)
+      await sleep(5000)
+      if (!(await isCommittedByUs(promptId).catch(() => false))) {
+        console.error(`  Not committed on chain, giving up`)
+        handledPrompts.delete(id)
+        return
+      }
+      console.log(`  Commit landed on chain anyway, continuing`)
+    }
   }
 
   // Step 2: Wait for promptAfter
@@ -143,13 +181,14 @@ async function handlePrompt(promptId, prompt, promptAfter, deadline) {
       args: [
         promptId,
         teeResponse.statement.response,
-        teeResponse.messageHash,
+        BigInt(teeResponse.statement.timestamp),
         teeResponse.signature,
         teeResponse.signatureChain.appSignature,
         teeResponse.signatureChain.kmsSignature,
         teeResponse.signatureChain.derivedPubkey,
         appPubkey,
       ],
+      ...(await feeOverrides()),
     })
     console.log(`  Proof submitted: ${submitHash}`)
     const receipt = await publicClient.waitForTransactionReceipt({ hash: submitHash })
@@ -178,10 +217,15 @@ async function pollForNewPrompts() {
       args: [BigInt(i)],
     })
 
-    // Status 0 = Open, and not expired
-    if (Number(status) === 0 && BigInt(Math.floor(Date.now() / 1000)) <= deadline) {
+    if (BigInt(Math.floor(Date.now() / 1000)) > deadline) continue
+
+    // Status 0 = Open; status 1 = Committed, which we resume if the commitment is ours
+    if (Number(status) === 0) {
       console.log(`Poll: Found open prompt #${i}`)
       handlePrompt(BigInt(i), prompt, promptAfter, deadline)
+    } else if (Number(status) === 1 && !handledPrompts.has(i) && await isCommittedByUs(BigInt(i))) {
+      console.log(`Poll: Found prompt #${i} committed by us but unfulfilled`)
+      handlePrompt(BigInt(i), prompt, promptAfter, deadline, true)
     }
   }
 
