@@ -93,4 +93,19 @@ export const CONTRACT_ABI = [
     type: "event",
     anonymous: false,
   },
+  {
+    inputs: [
+      { name: "promptId", type: "uint256", indexed: true },
+      { name: "notary", type: "address", indexed: false },
+    ],
+    name: "PromptCommitted",
+    type: "event",
+    anonymous: false,
+  },
+  {
+    inputs: [{ name: "promptId", type: "uint256", indexed: true }],
+    name: "PromptCancelled",
+    type: "event",
+    anonymous: false,
+  },
 ] as const
