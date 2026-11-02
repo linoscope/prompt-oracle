@@ -71,10 +71,10 @@ function `isExpired` reflects this; no explicit on-chain transition).
 | | |
 |---|---|
 | Network | Base mainnet (chain id 8453) |
-| PromptChancery | [`0xE453E01aEF962A836a0B78AbB91a18f01C3d8160`](https://basescan.org/address/0xE453E01aEF962A836a0B78AbB91a18f01C3d8160) |
+| PromptChancery | [`0xF6c9fdb1Eb486662984F792e3881162c63588308`](https://basescan.org/address/0xF6c9fdb1Eb486662984F792e3881162c63588308) |
 | KMS root (anchored by contract) | `0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51` |
-| Notary Core (TDX) app id | `a777f10802d5886c2f5a457fc12bbfce27005be1` |
-| Notary Core URL | `https://a777f10802d5886c2f5a457fc12bbfce27005be1-8080.dstack-base-prod5.phala.network` |
+| Notary Core (TDX) app id | `986f5ce6e7a5a4f393a292481ef411748f5b8c13` |
+| Notary Core URL | `https://986f5ce6e7a5a4f393a292481ef411748f5b8c13-8080.dstack-base-prod5.phala.network` |
 | Notary signer (derived inside the enclave) | `0xb86fD15Ac6d4DD4Fcb404eB0b69B35D7EcfFADA7` |
 | LLM | Grok 4.20 via xAI API (`grok-4.20-0309-reasoning`) |
 
@@ -108,7 +108,7 @@ PROMPT_ID=42
 
 # 1. Pull the on-chain fulfillment
 cast call --rpc-url https://mainnet.base.org \
-  0xE453E01aEF962A836a0B78AbB91a18f01C3d8160 \
+  0xF6c9fdb1Eb486662984F792e3881162c63588308 \
   'getFulfillment(uint256)(address,string,uint256)' "$PROMPT_ID"
 
 # 2. The contract already verified the chain at submission time, but to
@@ -228,8 +228,8 @@ cat > .env.relay <<'EOF'
 PRIVATE_KEY=0x<relay-wallet-with-Base-ETH>
 RPC_URL=https://mainnet.base.org
 WS_URL=                # optional; enables real-time PromptRequested events
-CONTRACT_ADDRESS=0xE453E01aEF962A836a0B78AbB91a18f01C3d8160
-TEE_URL=https://a777f10802d5886c2f5a457fc12bbfce27005be1-8080.dstack-base-prod5.phala.network
+CONTRACT_ADDRESS=0xF6c9fdb1Eb486662984F792e3881162c63588308
+TEE_URL=https://986f5ce6e7a5a4f393a292481ef411748f5b8c13-8080.dstack-base-prod5.phala.network
 EOF
 
 npm install
@@ -293,5 +293,5 @@ will want some of these:
 | KMS root (Base) | `0x52d3CF51c8A37A2CCfC79bBb98c7810d7Dd4CE51` |
 | KMS root (simulator) | `0x8f2cF602C9695b23130367ed78d8F557554de7C5` |
 | DstackKms (Base) | `0x2f83172A49584C017F2B256F0FB2Dca14126Ba9C` |
-| Live PromptChancery | `0xE453E01aEF962A836a0B78AbB91a18f01C3d8160` |
+| Live PromptChancery | `0xF6c9fdb1Eb486662984F792e3881162c63588308` |
 | Live notary signer (in TEE) | `0xb86fD15Ac6d4DD4Fcb404eB0b69B35D7EcfFADA7` |
